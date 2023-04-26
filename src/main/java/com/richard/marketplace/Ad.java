@@ -24,14 +24,14 @@ public class Ad {
         );
 
         apply(adCreatedEvent);
-
     }
 
     void apply(Object event) {
-        if (event instanceof AdCreatedEvent createdEvent) {
-            adCreatedEvent(createdEvent);
-        } else if (event instanceof AdUpdatedEvent updatedEvent) {
-            adUpdatedEvent(updatedEvent);
+        switch (event) {
+            case null -> System.out.println("cannot handle null event");
+            case AdCreatedEvent createdEvent -> adCreatedEvent(createdEvent);
+            case AdUpdatedEvent updatedEvent -> adUpdatedEvent(updatedEvent);
+            default -> System.out.println("unknown");
         }
     }
 
