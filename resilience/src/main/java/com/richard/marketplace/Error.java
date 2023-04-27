@@ -1,4 +1,4 @@
-package com.richard.marketplace.types;
+package com.richard.marketplace;
 
 import java.util.function.Function;
 

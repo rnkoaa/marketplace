@@ -51,7 +51,7 @@ class CreateAdCommandHandlerTest {
 //        switch (handle) {
 //            case Ok<Ad>(Ad ad) -> System.out.println(ad);
 //            default -> System.out.println("error happened");
-////            case com.richard.marketplace.types.Error<Exception> (Exception ex) -> System.out.println(ex);
+////            case com.richard.marketplace.Error<Exception> (Exception ex) -> System.out.println(ex);
 //        }
     }
 
