@@ -1,7 +1,9 @@
 package com.richard.marketplace.types;
 
 
-public final class Ok<T> implements Result<T> {
+import java.util.function.Function;
+
+public final class Ok<T, E> implements Result<T, E> {
 
     private final T item;
 
@@ -21,5 +23,10 @@ public final class Ok<T> implements Result<T> {
     @Override
     public boolean isError() {
         return false;
+    }
+
+    @Override
+    public <U> Result<U, E> map(Function<T, U> fun) {
+        return new Ok<>(fun.apply(item));
     }
 }

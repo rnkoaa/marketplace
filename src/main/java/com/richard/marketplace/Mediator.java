@@ -1,6 +1,5 @@
 package com.richard.marketplace;
 
-import com.richard.marketplace.types.Error;
 import com.richard.marketplace.types.Result;
 
 import java.util.HashMap;
@@ -26,19 +25,19 @@ public class Mediator {
         commandTypes.put(handler.getClass(), commandType);
     }
 
-    Result<?> handle(Object command) {
+    Result<?, Exception> handle(Object command) {
         var commandClass = command.getClass();
         Object handlerObject = handlers.get(commandClass);
         if (handlerObject == null) {
-            return new Error("There's no handler registered for this class");
+            return Result.error("There's no handler registered for this class");
         }
 
         Class<?> commandType = commandTypes.get(handlerObject.getClass());
         if (commandType == null) {
-            return new Error("unable to determine type of command");
+            return Result.error("unable to determine type of command");
         }
         if (command.getClass() != commandType) {
-            return new Error("invalid registration of command with its handler");
+            return Result.error("invalid registration of command with its handler");
         }
         var commandHandler = (CommandHandler<?>) handlerObject;
         return commandHandler.handle(commandType.cast(command));

@@ -1,6 +1,8 @@
 package com.richard.marketplace.types;
 
-public final class Error implements Result<Exception> {
+import java.util.function.Function;
+
+public final class Error<T, E> implements Result<T, E> {
     private final Exception exception;
 
     public Error(String message) {
@@ -19,6 +21,11 @@ public final class Error implements Result<Exception> {
     @Override
     public boolean isError() {
         return true;
+    }
+
+    @Override
+    public <U> Result<U, E> map(Function<T, U> fun) {
+        return new Error<>(exception.getMessage());
     }
 }
 

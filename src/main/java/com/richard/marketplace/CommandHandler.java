@@ -4,6 +4,6 @@ import com.richard.marketplace.types.Result;
 
 public interface CommandHandler<V> {
 
-    Result<V> handle(Object command);
+    Result<V, Exception> handle(Object command);
 
 }
