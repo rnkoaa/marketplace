@@ -2,15 +2,14 @@ package com.richard.marketplace.types;
 
 import java.util.function.Function;
 
-public final class Error<T, E> implements Result<T, E> {
-    private final Exception exception;
+public record Error<T, E>(Throwable throwable) implements Result<T, E> {
 
     public Error(String message) {
-        exception = new RuntimeException(message);
+        this(new RuntimeException(message));
     }
 
-    public Exception getError() {
-        return exception;
+    public Throwable getError() {
+        return throwable;
     }
 
     @Override
@@ -24,8 +23,13 @@ public final class Error<T, E> implements Result<T, E> {
     }
 
     @Override
+    public T get() {
+        throw new IllegalArgumentException("Error does not have any value");
+    }
+
+    @Override
     public <U> Result<U, E> map(Function<T, U> fun) {
-        return new Error<>(exception.getMessage());
+        return new Error<>(throwable);
     }
 }
 

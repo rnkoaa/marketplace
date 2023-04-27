@@ -1,4 +1,4 @@
-package com.richard.marketplace;
+package com.richard.marketplace.cqrs.annotations;
 
 import java.lang.annotation.*;
 

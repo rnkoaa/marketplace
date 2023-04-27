@@ -1,23 +1,44 @@
 package com.richard.marketplace;
 
-import com.richard.marketplace.types.Ok;
-import com.richard.marketplace.types.Result;
+import com.richard.marketplace.cqrs.command.handler.CommandHandler;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class CreateAdCommandHandlerTest {
 
-    //    CommandHandler<CreateAdCommand, Ad> createAdCommandAdCommandHandler = new CreateAdCommandHandler();
-//    CommandHandler<UpdateAdCommand, Ad> updateAdCommandAdCommandHandler = new UpdateAdCommandHandler();
+    CommandHandler createAdCommandAdCommandHandler = new CreateAdCommandHandler();
+    CommandHandler updateAdCommandAdCommandHandler = new UpdateAdCommandHandler();
     Mediator mediator = new Mediator();
+
+    @BeforeEach
+    void setup() {
+        mediator.register(CreateAdCommand.class, createAdCommandAdCommandHandler);
+        mediator.register(UpdateAdCommand.class, updateAdCommandAdCommandHandler);
+    }
 
     @Test
     void validCommandShouldBeHandled() {
-        var ad = new Ad(new CreateAdCommand("Ipad 2"));
-        ad.apply(new AdUpdatedEvent(ad.getId(), "Ipad 3"));
+//        var ad = new Ad(new CreateAdCommand("Ipad 2"));
+        var result = mediator.handle(new CreateAdCommand(UUID.randomUUID(), "Ipad 2"));
 
-        assertEquals("Ipad 3", ad.getTitle());
+        assertTrue(result.isOk());
+        Ad ad = (Ad) result.get();
+
+
+        assertEquals("Ipad 2", ad.getTitle());
+//
+//        switch (result) {
+//            case Error<?, Exception> exceptionError ->
+//                    System.out.println(exceptionError.getError().getLocalizedMessage());
+//            case Ok<?, Exception>(Ad okAd) -> {
+//                System.out.println(okAd);
+//            }
+//            default -> throw new IllegalStateException("Unexpected value: " + result);
+//        }
 //        var command = new CreateAdCommand("Ipad 2");
 ////        Result<Ad> handle = createAdCommandAdCommandHandler.handle(command);
 //        assertTrue(handle.isOk());

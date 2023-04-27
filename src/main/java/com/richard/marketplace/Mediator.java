@@ -1,5 +1,7 @@
 package com.richard.marketplace;
 
+import com.richard.marketplace.cqrs.annotations.ForCommand;
+import com.richard.marketplace.cqrs.command.handler.CommandHandler;
 import com.richard.marketplace.types.Result;
 
 import java.util.HashMap;
@@ -25,7 +27,7 @@ public class Mediator {
         commandTypes.put(handler.getClass(), commandType);
     }
 
-    Result<?, Exception> handle(Object command) {
+    Result<?, Throwable> handle(Object command) {
         var commandClass = command.getClass();
         Object handlerObject = handlers.get(commandClass);
         if (handlerObject == null) {
@@ -39,7 +41,7 @@ public class Mediator {
         if (command.getClass() != commandType) {
             return Result.error("invalid registration of command with its handler");
         }
-        var commandHandler = (CommandHandler<?>) handlerObject;
+        var commandHandler = (CommandHandler) handlerObject;
         return commandHandler.handle(commandType.cast(command));
     }
 }

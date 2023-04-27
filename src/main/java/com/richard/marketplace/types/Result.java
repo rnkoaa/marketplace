@@ -9,13 +9,15 @@ public sealed interface Result<T, E> permits Ok, Error {
 
     boolean isError();
 
+    T get();
+
     <U> Result<U, E> map(final Function<T, U> fun);
 
     static <T, E> Result<T, E> ok(final T value) {
         return new Ok<>(value);
     }
 
-    static <T, E> Result<T, E> error(final String message) {
+    static <T, Throwable> Result<T, Throwable> error(final String message) {
         return new Error<>(message);
     }
 

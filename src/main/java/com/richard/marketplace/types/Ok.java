@@ -3,13 +3,7 @@ package com.richard.marketplace.types;
 
 import java.util.function.Function;
 
-public final class Ok<T, E> implements Result<T, E> {
-
-    private final T item;
-
-    public Ok(T item) {
-        this.item = item;
-    }
+public record Ok<T, E>(T item) implements Result<T, E> {
 
     public T get() {
         return item;

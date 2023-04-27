@@ -1,2 +1,2 @@
-rootProject.name = "mediator"
+rootProject.name = "marketplace"
 

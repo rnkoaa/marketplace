@@ -1,17 +1,25 @@
 package com.richard.marketplace;
 
-import com.richard.marketplace.types.Ok;
+import com.richard.marketplace.cqrs.AggregateRootHolder;
+import com.richard.marketplace.cqrs.annotations.ForCommand;
+import com.richard.marketplace.cqrs.command.handler.CommandHandler;
+import com.richard.marketplace.types.Error;
 import com.richard.marketplace.types.Result;
 
 @ForCommand(UpdateAdCommand.class) // circumvents type erasure
-public class UpdateAdCommandHandler implements CommandHandler<Ad> {
+public class UpdateAdCommandHandler implements CommandHandler {
     @Override
-    public Result<Ad, Exception> handle(Object command) {
+    public Result<Ad, Throwable> handle(Object command) {
         if (!(command instanceof UpdateAdCommand updateCommand)) {
-            return new Ok<>(null);
+            return new Error<>("unable to handle command of type " + command.getClass().getCanonicalName());
         }
-        var ad = new Ad(new CreateAdCommand(updateCommand.title()));
+        var maybeAggregateRoot = AggregateRootHolder.get(updateCommand.id().toString());
+        if (maybeAggregateRoot.isEmpty()) {
+            return Result.error("unable to find root aggregate");
+        }
+
+        Ad ad = (Ad) maybeAggregateRoot.get();
         ad.handle(updateCommand);
-        return new Ok<>(ad);
+        return Result.ok(ad);
     }
 }

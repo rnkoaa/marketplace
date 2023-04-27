@@ -1,32 +1,46 @@
 package com.richard.marketplace;
 
+import com.richard.marketplace.cqrs.annotations.Aggregate;
+import com.richard.marketplace.cqrs.AggregateRoot;
+import com.richard.marketplace.cqrs.annotations.AggregateIdentifier;
+import com.richard.marketplace.cqrs.annotations.CommandHandler;
+import com.richard.marketplace.cqrs.annotations.EventSourcingHandler;
+
 import java.time.Instant;
 import java.util.UUID;
 
-public class Ad {
+@Aggregate
+public class Ad extends AggregateRoot<AdId> {
 
-    private UUID id;
+    @AggregateIdentifier
+    private AdId id;
+
     private String title;
     private Instant createdAt;
     private Instant updatedAt;
 
+    public Ad() {
+    }
+
     public Ad(UUID id, String title, Instant createdAt, Instant updatedAt) {
-        this.id = id;
+        this.id = new AdId(id);
         this.title = title;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
+    @CommandHandler
     public Ad(CreateAdCommand command) {
         var adCreatedEvent = new AdCreatedEvent(
-                UUID.randomUUID(),
+                AdId.newId(),
                 command.title()
         );
 
         apply(adCreatedEvent);
     }
 
-    void apply(Object event) {
+    public void apply(Object event) {
+        super.apply(event);
         switch (event) {
             case null -> System.out.println("cannot handle null event");
             case AdCreatedEvent createdEvent -> adCreatedEvent(createdEvent);
@@ -35,19 +49,21 @@ public class Ad {
         }
     }
 
-    private void adUpdatedEvent(AdUpdatedEvent updatedEvent) {
+    @EventSourcingHandler
+    void adUpdatedEvent(AdUpdatedEvent updatedEvent) {
         this.title = updatedEvent.title();
         this.updatedAt = Instant.now();
     }
 
-    private void adCreatedEvent(AdCreatedEvent createdEvent) {
+    @EventSourcingHandler
+    void adCreatedEvent(AdCreatedEvent createdEvent) {
         this.title = createdEvent.title();
         this.id = createdEvent.id();
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }
 
-    public UUID getId() {
+    public AdId getId() {
         return id;
     }
 
@@ -73,6 +89,7 @@ public class Ad {
                 '}';
     }
 
+    @CommandHandler
     public void handle(UpdateAdCommand command) {
         var event = new AdUpdatedEvent(command.id(), command.title());
         apply(event);
