@@ -3,22 +3,40 @@ package com.richard.marketplace;
 import java.util.function.Function;
 
 // https://github.com/hdevalke/result4j/blob/master/src/main/java/result4j/Result.java
-public sealed interface Result<T, E> permits Ok, Error {
+public sealed interface Result<T, E> permits Ok, Error, Empty {
 
-    boolean isOk();
+   default boolean isOk() {
+       return false;
+   }
 
-    boolean isError();
+    default boolean isEmpty() {
+        return false;
+    }
 
-    T get();
+    default boolean isError() {
+        return false;
+    }
+
+    default T get() {
+        throw new RuntimeException("operation not supported");
+    }
+
+    default E getError() {
+        throw new RuntimeException("operation not supported");
+    }
 
     <U> Result<U, E> map(final Function<T, U> fun);
 
-    static <T, E> Result<T, E> ok(final T value) {
+    static <T, E> Result<T, E> empty() {
+        return new Empty<>();
+    }
+
+    static <T> Result<T, Throwable> ok(final T value) {
         return new Ok<>(value);
     }
 
-    static <T, Throwable> Result<T, Throwable> error(final String message) {
-        return new Error<>(message);
+    static <T> Result<T, Throwable> error(final String message) {
+        return new Error<>(new RuntimeException(message));
     }
 
 }

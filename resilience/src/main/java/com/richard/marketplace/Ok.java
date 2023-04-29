@@ -15,11 +15,6 @@ public record Ok<T, E>(T item) implements Result<T, E> {
     }
 
     @Override
-    public boolean isError() {
-        return false;
-    }
-
-    @Override
     public <U> Result<U, E> map(Function<T, U> fun) {
         return new Ok<>(fun.apply(item));
     }

@@ -2,19 +2,10 @@ package com.richard.marketplace;
 
 import java.util.function.Function;
 
-public record Error<T, E>(Throwable throwable) implements Result<T, E> {
+public record Error<T, E>(E throwable) implements Result<T, E> {
 
-    public Error(String message) {
-        this(new RuntimeException(message));
-    }
-
-    public Throwable getError() {
+    public E getError() {
         return throwable;
-    }
-
-    @Override
-    public boolean isOk() {
-        return false;
     }
 
     @Override

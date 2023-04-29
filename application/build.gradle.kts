@@ -1,8 +1,9 @@
 plugins {
     id("java")
+    id("application")
 }
 
-group = "org.example"
+group = "com.richard.marketplace"
 
 repositories {
     mavenCentral()

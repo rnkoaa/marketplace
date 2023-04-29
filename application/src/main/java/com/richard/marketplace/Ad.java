@@ -1,7 +1,7 @@
 package com.richard.marketplace;
 
-import com.richard.marketplace.cqrs.annotations.Aggregate;
 import com.richard.marketplace.cqrs.AggregateRoot;
+import com.richard.marketplace.cqrs.annotations.Aggregate;
 import com.richard.marketplace.cqrs.annotations.AggregateIdentifier;
 import com.richard.marketplace.cqrs.annotations.CommandHandler;
 import com.richard.marketplace.cqrs.annotations.EventSourcingHandler;
@@ -31,9 +31,10 @@ public class Ad extends AggregateRoot<AdId> {
 
     @CommandHandler
     public Ad(CreateAdCommand command) {
+        var id =  AdId.newId();
         var adCreatedEvent = new AdCreatedEvent(
-                AdId.newId(),
-                command.title()
+            id,
+            command.title()
         );
 
         apply(adCreatedEvent);
@@ -82,16 +83,15 @@ public class Ad extends AggregateRoot<AdId> {
     @Override
     public String toString() {
         return "Ad{" +
-                "id=" + id +
-                ", title='" + title + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                '}';
+            "id=" + id +
+            ", title='" + title + '\'' +
+            ", createdAt=" + createdAt +
+            ", updatedAt=" + updatedAt +
+            '}';
     }
 
     @CommandHandler
-    public void handle(UpdateAdCommand command) {
-        var event = new AdUpdatedEvent(command.id(), command.title());
-        apply(event);
+    public void handle(UpdateAdTextCommand command) {
+        apply(new AdUpdatedEvent(AdId.of(command.id()), command.title()));
     }
 }

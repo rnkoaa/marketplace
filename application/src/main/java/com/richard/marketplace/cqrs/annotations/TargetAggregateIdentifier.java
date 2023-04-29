@@ -6,5 +6,5 @@ import java.lang.annotation.*;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
-public @interface AggregateRootId {
+public @interface TargetAggregateIdentifier {
 }

@@ -1,6 +1,6 @@
 package com.richard.marketplace.cqrs;
 
-import com.richard.marketplace.cqrs.annotations.AggregateRootId;
+import com.richard.marketplace.cqrs.annotations.AggregateIdentifier;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -26,7 +26,7 @@ public class AggregateCommandHandler {
         if (command.getClass().isRecord()) {
             RecordComponent[] recordComponents = command.getClass().getRecordComponents();
             var aggregateRootIdComponent = Arrays.stream(recordComponents)
-                    .filter(it -> it.isAnnotationPresent(AggregateRootId.class))
+                    .filter(it -> it.isAnnotationPresent(AggregateIdentifier.class))
                     .findFirst();
 
             if(aggregateRootIdComponent.isPresent()){

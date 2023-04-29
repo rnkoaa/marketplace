@@ -13,12 +13,12 @@ public record AdId(UUID id) {
         this(UUID.randomUUID());
     }
 
-    static AdId newId(UUID id) {
-        return new AdId(id);
-    }
-
     static AdId newId() {
         return new AdId(UUID.randomUUID());
+    }
+
+    public static AdId of(UUID id) {
+        return new AdId(id);
     }
 
     @Override
