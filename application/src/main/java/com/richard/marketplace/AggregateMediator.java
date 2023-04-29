@@ -12,6 +12,7 @@ import java.util.*;
 
 public class AggregateMediator {
 
+    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
     static final Map<Class<?>, Class<?>> handlers = new HashMap<>();
     static final Map<Class<?>, String> handlerMethodName = new HashMap<>();
 
@@ -19,7 +20,7 @@ public class AggregateMediator {
 
     List<Class<?>> allowedAggregateTypes = List.of(String.class, UUID.class);
 
-    public AggregateMediator() {
+    public AggregateMediator(AggregateLoader aggregateLoader) {
         handlers.clear();
     }
 
@@ -104,7 +105,6 @@ public class AggregateMediator {
         }
 
         try {
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
             MethodType mt = MethodType.methodType(void.class, command.getClass());
             MethodHandle handleMethod = lookup.findVirtual(handler.getClass(), methodName, mt);
             handleMethod.invoke(handler, command);
@@ -140,6 +140,24 @@ public class AggregateMediator {
 
         }
         return Result.error("not found");
+    }
+
+    Result<?, Throwable> loadOrCreateAggregate(String aggregateId, Class<?> aggregateType) {
+        Optional<Object> optionalLoad = aggregateLoader.load(aggregateId);
+        return optionalLoad.map(Result::ok)
+            .orElseGet(() -> generateNewInstance(aggregateType));
+    }
+
+    private Result<Object, Throwable> generateNewInstance(Class<?> aggregateType) {
+
+        try {
+            MethodType mt = MethodType.methodType(void.class);
+            MethodHandle handleMethod = lookup.findConstructor(aggregateType, mt);
+            Object newObject = handleMethod.invoke();
+            return Result.ok(newObject);
+        } catch (Throwable e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     Result<?, Throwable> handleObjectForConstructor(Object command, Class<?> handlerClass) {

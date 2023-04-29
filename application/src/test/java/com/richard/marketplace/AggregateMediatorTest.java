@@ -2,6 +2,7 @@ package com.richard.marketplace;
 
 import com.richard.marketplace.aggregate.Market;
 import com.richard.marketplace.cqrs.support.TargetAggregateIdentifierComponents;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -12,10 +13,16 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 class AggregateMediatorTest {
+    final AggregateLoader aggregateLoader = new AggregateLoader();
+
+    @AfterEach
+    void cleanup() {
+        aggregateLoader.clear();
+    }
 
     @Test
     void successfullyRegisterHandler() {
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(CreateAdCommand.class, Ad.class);
         aggregateMediator.register(UpdateAdTextCommand.class, Ad.class);
 
@@ -32,7 +39,7 @@ class AggregateMediatorTest {
 
     @Test
     void successfullyRegisterMultipleHandlers() {
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(CreateAdCommand.class, Ad.class);
         aggregateMediator.register(UpdateAdTextCommand.class, Ad.class);
 
@@ -57,7 +64,7 @@ class AggregateMediatorTest {
     void handleCreateCommand() {
         var adId = UUID.randomUUID();
         var title = "iPad 2";
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(CreateAdCommand.class, Ad.class);
         aggregateMediator.register(UpdateAdTextCommand.class, Ad.class);
 
@@ -86,7 +93,7 @@ class AggregateMediatorTest {
     void handleUpdateCommand() {
         var adId = UUID.randomUUID();
         var title = "iPad 2";
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(CreateAdCommand.class, Ad.class);
         aggregateMediator.register(UpdateAdTextCommand.class, Ad.class);
 
@@ -108,7 +115,7 @@ class AggregateMediatorTest {
     @Test
     void handleCommand() {
         Ad ad = new Ad(new CreateAdCommand("iPad 3 Pro"));
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(UpdateAdTextCommand.class, Ad.class);
 
         assertDoesNotThrow(() -> {
@@ -123,7 +130,7 @@ class AggregateMediatorTest {
     @Test
     void nonSupportedAggregateTypesReturnError() {
         var updateMarket = new Market.UpdateMarket(Instant.now());
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(Market.UpdateMarket.class, Market.class);
 
         var result = aggregateMediator.handle(updateMarket);
@@ -136,7 +143,7 @@ class AggregateMediatorTest {
     @Test
     void testCommandIdentifierInfoForRecordsWithAnnotation() {
         var updateCommand = new Market.UpdateMarket(Instant.now());
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         Result<TargetAggregateIdentifierComponents, Throwable> aggregateIdInfo = aggregateMediator.getAggregateIdInfo(updateCommand);
         assertThat(aggregateIdInfo.isOk()).isTrue();
         TargetAggregateIdentifierComponents targetAggregateIdentifierComponents = aggregateIdInfo.get();
@@ -147,7 +154,7 @@ class AggregateMediatorTest {
     @Test
     void testCreateCommandHandlerWithAnnotation() {
         var createCommand = new CreateAdCommand("some title");
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(CreateAdCommand.class, Ad.class);
 
         Result<?, Throwable> result = aggregateMediator.handle(createCommand);
@@ -157,7 +164,7 @@ class AggregateMediatorTest {
     @Test
     void testNonConstructorCommandReturnsEmpty() {
         var updateCommand = new UpdateAdTextCommand(UUID.randomUUID(), "some title");
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(UpdateAdTextCommand.class, Ad.class);
         Result<?, Throwable> result = aggregateMediator.handleObjectForConstructor(updateCommand, Ad.class);
         assertThat(result.isOk()).isFalse();
@@ -168,7 +175,7 @@ class AggregateMediatorTest {
     @Test
     void testConstructorCommandReturnsOk() {
         var createCommand = new CreateAdCommand("some title");
-        AggregateMediator aggregateMediator = new AggregateMediator();
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
         aggregateMediator.register(CreateAdCommand.class, Ad.class);
         Result<?, Throwable> result = aggregateMediator.handleObjectForConstructor(createCommand, Ad.class);
         assertThat(result.isOk()).isTrue();
@@ -178,5 +185,45 @@ class AggregateMediatorTest {
         Ad ad = (Ad) result.get();
         assertThat(ad).isNotNull();
         assertThat(ad.getTitle()).isEqualTo(createCommand.title());
+    }
+
+    @Test
+    void ableToGenerateANewAdClassEvenIfNotSaved() {
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
+        var result = aggregateMediator.loadOrCreateAggregate(UUID.randomUUID().toString(), Ad.class);
+        assertThat(result.isOk()).isTrue();
+
+        Ad ad = (Ad) result.get();
+        assertThat(ad).isNotNull();
+        assertThat(ad.getId()).isNull();
+    }
+
+
+    @Test
+    void successfullyLoadAnAggregateThatIsAlreadySaved() {
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
+        var ad = new Ad(new CreateAdCommand("iPad Pro 2023"));
+        var aggregateId = ad.getId().id();
+
+        //
+        aggregateLoader.saveAggregate(aggregateId.toString(), ad);
+
+        var result = aggregateMediator.loadOrCreateAggregate(aggregateId.toString(), Ad.class);
+        assertThat(result.isOk()).isTrue();
+
+        Ad loadedAd = (Ad) result.get();
+        assertThat(ad).isNotNull();
+        assertThat(ad.getId()).isNotNull().isEqualTo(loadedAd.getId());
+    }
+
+    @Test
+    void notAbleToCreateAnAggregateWithoutDefaultConstructor() {
+        AggregateMediator aggregateMediator = new AggregateMediator(aggregateLoader);
+        var result = aggregateMediator.loadOrCreateAggregate(UUID.randomUUID().toString(), Market.class);
+        assertThat(result.isError()).isTrue();
+
+        Throwable error = result.getError();
+        assertThat(error).isInstanceOf(RuntimeException.class);
+        assertThat(error.getMessage()).startsWith("no such constructor");
     }
 }
